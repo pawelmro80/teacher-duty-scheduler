@@ -1,0 +1,95 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.0.0, pluggy-1.6.0 -- /Users/zajac/Application Data/Own App builds/super-memo-gdrive/android/app/src/main/java/com/antigravity/LOIV-dyzur/apps/backend/venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/zajac/Application Data/Own App builds/super-memo-gdrive/android/app/src/main/java/com/antigravity/LOIV-dyzur/apps/backend
+plugins: anyio-4.12.0
+collecting ... collected 9 items
+
+tests/test_api_endpoints.py::test_health_check PASSED                    [ 11%]
+tests/test_api_endpoints.py::test_config_save_and_load FAILED            [ 22%]
+tests/test_api_endpoints.py::test_create_and_delete_teacher FAILED       [ 33%]
+tests/test_api_endpoints.py::test_solver_endpoint_structure FAILED       [ 44%]
+tests/test_solver_engine.py::TestDutySolver::test_basic_assignment_success PASSED [ 55%]
+tests/test_solver_engine.py::TestDutySolver::test_double_lesson_block_logic PASSED [ 66%]
+tests/test_solver_engine.py::TestDutySolver::test_duplicate_time_conflict_impossible PASSED [ 77%]
+tests/test_solver_engine.py::TestDutySolver::test_duplicate_time_conflict_resolved_with_more_staff PASSED [ 88%]
+tests/test_solver_engine.py::TestDutySolver::test_unavailable_teacher PASSED [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_config_save_and_load ___________________________
+
+    def test_config_save_and_load():
+        # 1. Save Config
+        payload = {
+            "key": "test_config_key",
+            "value": {"theme": "dark", "version": 1}
+        }
+        response = client.post("/api/config/save", json=payload)
+>       assert response.status_code == 200
+E       assert 404 == 200
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_endpoints.py:38: AssertionError
+________________________ test_create_and_delete_teacher ________________________
+
+    def test_create_and_delete_teacher():
+        # 1. Create Teacher (Mock schedule upload)
+        # Usually this is via file upload, but we can verify GET/DELETE logic if we seed DB or use exposed endpoints.
+        # Current API might rely solely on OCR PDF upload, lets check if we can list empty first.
+        response = client.get("/api/schedule/")
+>       assert response.status_code == 200
+E       assert 404 == 200
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_endpoints.py:51: AssertionError
+________________________ test_solver_endpoint_structure ________________________
+
+    def test_solver_endpoint_structure():
+        # Sending a generate request without data should fail gracefully (422) or return specific error
+        # This checks if the endpoint is reachable
+        response = client.post("/api/solver/generate")
+        # It might return success with empty solution or 422 if no teachers
+>       assert response.status_code in [200, 422, 500]
+E       assert 404 in [200, 422, 500]
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_endpoints.py:59: AssertionError
+=============================== warnings summary ===============================
+database.py:11
+  /Users/zajac/Application Data/Own App builds/super-memo-gdrive/android/app/src/main/java/com/antigravity/LOIV-dyzur/apps/backend/database.py:11: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    Base = declarative_base()
+
+main.py:13
+  /Users/zajac/Application Data/Own App builds/super-memo-gdrive/android/app/src/main/java/com/antigravity/LOIV-dyzur/apps/backend/main.py:13: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+venv/lib/python3.9/site-packages/fastapi/applications.py:4495
+  /Users/zajac/Application Data/Own App builds/super-memo-gdrive/android/app/src/main/java/com/antigravity/LOIV-dyzur/apps/backend/venv/lib/python3.9/site-packages/fastapi/applications.py:4495: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+venv/lib/python3.9/site-packages/ortools/sat/python/cp_model.py:68
+  /Users/zajac/Application Data/Own App builds/super-memo-gdrive/android/app/src/main/java/com/antigravity/LOIV-dyzur/apps/backend/venv/lib/python3.9/site-packages/ortools/sat/python/cp_model.py:68: DeprecationWarning: 
+  Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+  (to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+  but was not found to be installed on your system.
+  If this would cause problems for you,
+  please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+          
+    import pandas as pd
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_api_endpoints.py::test_config_save_and_load - assert 404 ==...
+FAILED tests/test_api_endpoints.py::test_create_and_delete_teacher - assert 4...
+FAILED tests/test_api_endpoints.py::test_solver_endpoint_structure - assert 4...
+=================== 3 failed, 6 passed, 4 warnings in 1.23s ====================

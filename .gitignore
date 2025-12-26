@@ -1,0 +1,42 @@
+# System files
+.DS_Store
+Thumbs.db
+
+# Node / JS
+node_modules/
+dist/
+release/
+build/
+.env
+.env.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Project Specific
+backend.log
+frontend.log
+*.db
+*.sqlite3
+teacher_scheduler.db
+
+# IDE
+.vscode/
+.idea/
+
+# Backend uploads/fonts
+apps/backend/services/*.ttf
+!apps/backend/services/Roboto-Regular.ttf
+!apps/backend/services/Roboto-Bold.ttf

@@ -1,0 +1,22 @@
+{
+    "assignments": [
+        {
+            "teacher_code": "AB",
+            "day": "Monday",
+            "break_index": 0,
+            "zone_name": "Boisko",
+            "break_name": "Po 1. lekcji"
+        },
+        {
+            "teacher_code": "XY",
+            "day": "Monday",
+            "break_index": 0,
+            "zone_name": "Korytarz",
+            "break_name": "Po 1. lekcji"
+        }
+    ],
+    "zones": [
+        "Boisko",
+        "Korytarz"
+    ]
+}

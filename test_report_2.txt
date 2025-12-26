@@ -1,0 +1,333 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.0.0, pluggy-1.6.0 -- /Users/zajac/Application Data/Own App builds/super-memo-gdrive/android/app/src/main/java/com/antigravity/LOIV-dyzur/apps/backend/venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/zajac/Application Data/Own App builds/super-memo-gdrive/android/app/src/main/java/com/antigravity/LOIV-dyzur/apps/backend
+plugins: anyio-4.12.0
+collecting ... collected 9 items
+
+tests/test_api_endpoints.py::test_health_check PASSED                    [ 11%]
+tests/test_api_endpoints.py::test_config_save_and_load FAILED            [ 22%]
+tests/test_api_endpoints.py::test_create_and_delete_teacher FAILED       [ 33%]
+tests/test_api_endpoints.py::test_solver_endpoint_structure PASSED       [ 44%]
+tests/test_solver_engine.py::TestDutySolver::test_basic_assignment_success PASSED [ 55%]
+tests/test_solver_engine.py::TestDutySolver::test_double_lesson_block_logic PASSED [ 66%]
+tests/test_solver_engine.py::TestDutySolver::test_duplicate_time_conflict_impossible PASSED [ 77%]
+tests/test_solver_engine.py::TestDutySolver::test_duplicate_time_conflict_resolved_with_more_staff PASSED [ 88%]
+tests/test_solver_engine.py::TestDutySolver::test_unavailable_teacher PASSED [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_config_save_and_load ___________________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x1355c9df0>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x135652610>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x135a23eb0>
+statement = <sqlalchemy.dialects.sqlite.base.SQLiteCompiler object at 0x132464490>
+parameters = [('test_config_key', 1, 0)]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py:1967: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x135652610>
+cursor = <sqlite3.Cursor object at 0x13595aa40>
+statement = 'SELECT duty_config.id AS duty_config_id, duty_config."key" AS duty_config_key, duty_config.value_json AS duty_config_value_json \nFROM duty_config \nWHERE duty_config."key" = ?\n LIMIT ? OFFSET ?'
+parameters = ('test_config_key', 1, 0)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x135a23eb0>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.OperationalError: no such table: duty_config
+
+venv/lib/python3.9/site-packages/sqlalchemy/engine/default.py:952: OperationalError
+
+The above exception was the direct cause of the following exception:
+
+    def test_config_save_and_load():
+        # 1. Save Config
+        payload = {
+            "key": "test_config_key",
+            "value": {"theme": "dark", "version": 1}
+        }
+>       response = client.post("/api/config/save", json=payload)
+
+tests/test_api_endpoints.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+venv/lib/python3.9/site-packages/starlette/testclient.py:593: in post
+    return super().post(
+venv/lib/python3.9/site-packages/httpx/_client.py:1146: in post
+    return self.request(
+venv/lib/python3.9/site-packages/starlette/testclient.py:468: in request
+    return super().request(
+venv/lib/python3.9/site-packages/httpx/_client.py:828: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+venv/lib/python3.9/site-packages/httpx/_client.py:915: in send
+    response = self._send_handling_auth(
+venv/lib/python3.9/site-packages/httpx/_client.py:943: in _send_handling_auth
+    response = self._send_handling_redirects(
+venv/lib/python3.9/site-packages/httpx/_client.py:980: in _send_handling_redirects
+    response = self._send_single_request(request)
+venv/lib/python3.9/site-packages/httpx/_client.py:1016: in _send_single_request
+    response = transport.handle_request(request)
+venv/lib/python3.9/site-packages/starlette/testclient.py:344: in handle_request
+    raise exc
+venv/lib/python3.9/site-packages/starlette/testclient.py:341: in handle_request
+    portal.call(self.app, scope, receive, send)
+venv/lib/python3.9/site-packages/anyio/from_thread.py:326: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/concurrent/futures/_base.py:445: in result
+    return self.__get_result()
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/concurrent/futures/_base.py:390: in __get_result
+    raise self._exception
+venv/lib/python3.9/site-packages/anyio/from_thread.py:257: in _call_func
+    retval = await retval_or_awaitable
+venv/lib/python3.9/site-packages/fastapi/applications.py:1054: in __call__
+    await super().__call__(scope, receive, send)
+venv/lib/python3.9/site-packages/starlette/applications.py:123: in __call__
+    await self.middleware_stack(scope, receive, send)
+venv/lib/python3.9/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+venv/lib/python3.9/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+venv/lib/python3.9/site-packages/starlette/middleware/cors.py:83: in __call__
+    await self.app(scope, receive, send)
+venv/lib/python3.9/site-packages/starlette/middleware/exceptions.py:62: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+venv/lib/python3.9/site-packages/starlette/_exception_handler.py:64: in wrapped_app
+    raise exc
+venv/lib/python3.9/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    await app(scope, receive, sender)
+venv/lib/python3.9/site-packages/starlette/routing.py:762: in __call__
+    await self.middleware_stack(scope, receive, send)
+venv/lib/python3.9/site-packages/starlette/routing.py:782: in app
+    await route.handle(scope, receive, send)
+venv/lib/python3.9/site-packages/starlette/routing.py:297: in handle
+    await self.app(scope, receive, send)
+venv/lib/python3.9/site-packages/starlette/routing.py:77: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+venv/lib/python3.9/site-packages/starlette/_exception_handler.py:64: in wrapped_app
+    raise exc
+venv/lib/python3.9/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    await app(scope, receive, sender)
+venv/lib/python3.9/site-packages/starlette/routing.py:72: in app
+    response = await func(request)
+venv/lib/python3.9/site-packages/fastapi/routing.py:299: in app
+    raise e
+venv/lib/python3.9/site-packages/fastapi/routing.py:294: in app
+    raw_response = await run_endpoint_function(
+venv/lib/python3.9/site-packages/fastapi/routing.py:191: in run_endpoint_function
+    return await dependant.call(**values)
+api/config.py:22: in save_config
+    db_item = db.query(DutyConfigDB).filter(DutyConfigDB.key == item.key).first()
+venv/lib/python3.9/site-packages/sqlalchemy/orm/query.py:2759: in first
+    return self.limit(1)._iter().first()  # type: ignore
+venv/lib/python3.9/site-packages/sqlalchemy/orm/query.py:2857: in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+venv/lib/python3.9/site-packages/sqlalchemy/orm/session.py:2351: in execute
+    return self._execute_internal(
+venv/lib/python3.9/site-packages/sqlalchemy/orm/session.py:2249: in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+venv/lib/python3.9/site-packages/sqlalchemy/orm/context.py:306: in orm_execute_statement
+    result = conn.execute(
+venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py:1419: in execute
+    return meth(
+venv/lib/python3.9/site-packages/sqlalchemy/sql/elements.py:527: in _execute_on_connection
+    return connection._execute_clauseelement(
+venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py:1846: in _execute_context
+    return self._exec_single_context(
+venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py:2363: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x135652610>
+cursor = <sqlite3.Cursor object at 0x13595aa40>
+statement = 'SELECT duty_config.id AS duty_config_id, duty_config."key" AS duty_config_key, duty_config.value_json AS duty_config_value_json \nFROM duty_config \nWHERE duty_config."key" = ?\n LIMIT ? OFFSET ?'
+parameters = ('test_config_key', 1, 0)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x135a23eb0>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: duty_config
+E       [SQL: SELECT duty_config.id AS duty_config_id, duty_config."key" AS duty_config_key, duty_config.value_json AS duty_config_value_json 
+E       FROM duty_config 
+E       WHERE duty_config."key" = ?
+E        LIMIT ? OFFSET ?]
+E       [parameters: ('test_config_key', 1, 0)]
+E       (Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+venv/lib/python3.9/site-packages/sqlalchemy/engine/default.py:952: OperationalError
+________________________ test_create_and_delete_teacher ________________________
+
+    def test_create_and_delete_teacher():
+        # 1. Create Teacher (Mock schedule upload)
+        # Usually this is via file upload, but we can verify GET/DELETE logic if we seed DB or use exposed endpoints.
+        # Current API might rely solely on OCR PDF upload, lets check if we can list empty first.
+        response = client.get("/api/schedule/")
+>       assert response.status_code == 200
+E       assert 404 == 200
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_api_endpoints.py:51: AssertionError
+=============================== warnings summary ===============================
+database.py:11
+  /Users/zajac/Application Data/Own App builds/super-memo-gdrive/android/app/src/main/java/com/antigravity/LOIV-dyzur/apps/backend/database.py:11: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    Base = declarative_base()
+
+venv/lib/python3.9/site-packages/ortools/sat/python/cp_model.py:68
+  /Users/zajac/Application Data/Own App builds/super-memo-gdrive/android/app/src/main/java/com/antigravity/LOIV-dyzur/apps/backend/venv/lib/python3.9/site-packages/ortools/sat/python/cp_model.py:68: DeprecationWarning: 
+  Pyarrow will become a required dependency of pandas in the next major release of pandas (pandas 3.0),
+  (to allow more performant data types, such as the Arrow string type, and better interoperability with other libraries)
+  but was not found to be installed on your system.
+  If this would cause problems for you,
+  please provide us feedback at https://github.com/pandas-dev/pandas/issues/54466
+          
+    import pandas as pd
+
+main.py:13
+  /Users/zajac/Application Data/Own App builds/super-memo-gdrive/android/app/src/main/java/com/antigravity/LOIV-dyzur/apps/backend/main.py:13: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+venv/lib/python3.9/site-packages/fastapi/applications.py:4495
+  /Users/zajac/Application Data/Own App builds/super-memo-gdrive/android/app/src/main/java/com/antigravity/LOIV-dyzur/apps/backend/venv/lib/python3.9/site-packages/fastapi/applications.py:4495: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_api_endpoints.py::test_config_save_and_load - sqlalchemy.ex...
+FAILED tests/test_api_endpoints.py::test_create_and_delete_teacher - assert 4...
+=================== 2 failed, 7 passed, 4 warnings in 1.31s ====================
