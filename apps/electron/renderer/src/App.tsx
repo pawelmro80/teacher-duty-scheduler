@@ -10,6 +10,9 @@ import { MergeModal } from './components/MergeModal'
 import { DutySettings } from './components/DutySettings'
 import { GeneratorView } from './components/GeneratorView'
 
+import defaultLogo from './assets/logo.png'
+import { Edit2 } from 'lucide-react'
+
 interface OCRResult extends TeacherSchedule {
     origin?: 'upload' | 'database'
 }
@@ -28,6 +31,9 @@ function App() {
     const [conflictTeacher, setConflictTeacher] = useState<TeacherSchedule | null>(null)
     const [conflictTarget, setConflictTarget] = useState<any>(null)
 
+    // Logo State
+    const [logoSrc, setLogoSrc] = useState<string>(defaultLogo)
+
     useEffect(() => {
         const checkHealth = async () => {
             try {
@@ -41,6 +47,45 @@ function App() {
         const interval = setInterval(checkHealth, 15000)
         return () => clearInterval(interval)
     }, [])
+
+    // Fetch Logo
+    useEffect(() => {
+        const fetchLogo = async () => {
+            try {
+                const res = await axios.get('http://127.0.0.1:8765/api/config/school_logo')
+                if (res.data.value) {
+                    setLogoSrc(res.data.value)
+                }
+            } catch (e) {
+                // Ignore, use default
+            }
+        }
+        fetchLogo()
+    }, [])
+
+    const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0) return
+        const file = e.target.files[0]
+
+        // Convert to Base64
+        const reader = new FileReader()
+        reader.onloadend = async () => {
+            const base64 = reader.result as string
+            setLogoSrc(base64) // Optimistic update
+
+            // Save to DB
+            try {
+                await axios.post('http://127.0.0.1:8765/api/config/save', {
+                    key: 'school_logo',
+                    value: base64
+                })
+            } catch (err) {
+                console.error("Failed to save logo", err)
+                alert("Błąd zapisu loga!")
+            }
+        }
+        reader.readAsDataURL(file)
+    }
 
     const handleFilesSelected = (newFiles: File[]) => {
         setFiles(prev => [...prev, ...newFiles])
@@ -187,7 +232,7 @@ function App() {
 
                 <nav className="flex-1 p-4 space-y-2">
                     {[
-                        { id: 'upload', icon: UploadIcon, label: 'Wgraj i Edytuj' },
+                        { id: 'upload', icon: UploadIcon, label: 'Import Danych' },
                         { id: 'database', icon: Database, label: 'Baza Nauczycieli' },
                         { id: 'settings', icon: Settings, label: 'Ustawienia Dyżurów' },
                         { id: 'generator', icon: CalendarCheck, label: 'Generator' }
@@ -206,6 +251,31 @@ function App() {
                         </button>
                     ))}
                 </nav>
+
+                {/* Logo Footer */}
+                <div className={`p-4 border-t border-gray-100 flex justify-center items-center ${isSidebarCollapsed ? 'py-4' : 'py-6'} relative group`}>
+                    <img
+                        src={logoSrc}
+                        alt="Logo Szkoły"
+                        className={`transition-all duration-300 object-contain ${isSidebarCollapsed ? 'w-10 h-10' : 'w-24 h-24'}`}
+                    />
+
+                    {!isSidebarCollapsed && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 transition-colors rounded-lg cursor-pointer"
+                            title="Kliknij, aby zmienić logo (Zalecane 200x200px)"
+                            onClick={() => document.getElementById('logo-upload')?.click()}
+                        >
+                            <Edit2 className="text-gray-700 opacity-0 group-hover:opacity-100" />
+                            <input
+                                id="logo-upload"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleLogoChange}
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="flex-1 overflow-auto h-screen">
@@ -216,8 +286,12 @@ function App() {
                     {activeTab === 'upload' && (
                         <div className="space-y-8">
                             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                                <h2 className="text-lg font-semibold mb-4">Add New Schedules</h2>
-                                <FileUploader onFilesSelected={handleFilesSelected} isUploading={false} />
+                                <h2 className="text-lg font-semibold mb-4">Importuj Dane</h2>
+                                <FileUploader
+                                    onFilesSelected={handleFilesSelected}
+                                    isUploading={false}
+                                    onRefresh={() => setRefreshDb(prev => prev + 1)}
+                                />
 
                                 <UploadedFilePreview
                                     files={files}

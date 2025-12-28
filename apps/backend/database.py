@@ -3,7 +3,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-DATABASE_URL = "sqlite:///./teacher_scheduler_v2.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'teacher_scheduler_v2.db')}"
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -18,6 +19,8 @@ class TeacherScheduleDB(Base):
     teacher_name = Column(String)
     is_verified = Column(Boolean, default=False)
     schedule_json = Column(JSON) # Storing full schedule as JSON blob for simplicity in Sprint 0
+    preferences_json = Column(JSON, default={}) # New: { "preferred_zones": ["z1"] }
+    manual_duties_json = Column(JSON, default=[]) # New: List of ManualDuty serialized
 
 class DutyConfigDB(Base):
     __tablename__ = "duty_config"

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 from enum import Enum
 
 class DayOfWeek(str, Enum):
@@ -17,10 +17,18 @@ class LessonSlot(BaseModel):
     subject: Optional[str] = None
     is_empty: bool = True
 
+class ManualDuty(BaseModel):
+    day: DayOfWeek
+    break_index: int # 1 means "After Lesson 1"
+    zone_id: str
+    zone_name: Optional[str] = None # Helper for display if needed
+
 class TeacherSchedule(BaseModel):
     teacher_code: str
     teacher_name: str
     schedule: List[LessonSlot]
+    manual_duties: Optional[List[ManualDuty]] = []
+    preferences: Optional[Dict] = {} # e.g. { "preferred_zones": ["z1"] }
 
 class DutyAssignment(BaseModel):
     id: Optional[int] = None

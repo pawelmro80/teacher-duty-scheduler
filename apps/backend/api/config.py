@@ -12,6 +12,15 @@ class ConfigItem(BaseModel):
 
 @router.get("/{key}")
 async def get_config(key: str, db: Session = Depends(get_db)):
+    """
+    Retrieves a configuration item by key.
+    
+    Args:
+        key (str): Unique configuration key (e.g. 'duty_rules', 'school_logo').
+        
+    Returns:
+        dict: Object containing key and value_json (or None if not found).
+    """
     item = db.query(DutyConfigDB).filter(DutyConfigDB.key == key).first()
     if not item:
         return {"key": key, "value": None}
@@ -19,6 +28,16 @@ async def get_config(key: str, db: Session = Depends(get_db)):
 
 @router.post("/save")
 async def save_config(item: ConfigItem, db: Session = Depends(get_db)):
+    """
+    Upserts a configuration item.
+    
+    Processing:
+    - Finds existing item by key and updates it.
+    - Creates new item if key doesn't exist.
+    
+    Args:
+        item (ConfigItem): Payload containing key and arbitary JSON value.
+    """
     db_item = db.query(DutyConfigDB).filter(DutyConfigDB.key == item.key).first()
     if db_item:
         db_item.value_json = item.value

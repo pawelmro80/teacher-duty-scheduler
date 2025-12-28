@@ -6,6 +6,13 @@ from services.ocr.preprocessor import ImagePreprocessor
 from models.schemas import LessonSlot, TeacherSchedule
 
 class VisionClient:
+    """
+    Client for OpenAI Vision API to extract schedule data from images.
+    
+    Attributes:
+        client (AsyncOpenAI): Authenticated OpenAI client.
+        preprocessor (ImagePreprocessor): Helper for image optimization before sending.
+    """
     def __init__(self):
         self.api_key = os.getenv("OPENAI_API_KEY")
         if not self.api_key:
@@ -19,6 +26,20 @@ class VisionClient:
         self.preprocessor = ImagePreprocessor()
 
     async def analyze_schedule(self, image_bytes: bytes, teacher_code: str = "UNKNOWN") -> TeacherSchedule:
+        """
+        Sends image to GPT-4o with a specialized system prompt for Polish School Schedules.
+        
+        Args:
+            image_bytes (bytes): Raw image data (JPEG/PNG).
+            teacher_code (str): Hint for teacher identity (e.g. "KO").
+            
+        Returns:
+            TeacherSchedule: Structured data extracted from the image.
+            
+        Raises:
+            ValueError: If API Key is missing.
+            Exception: On API failure or parsing error.
+        """
         if not self.client:
             raise ValueError("OpenAI API Key provided")
 
