@@ -40,3 +40,8 @@ teacher_scheduler.db
 apps/backend/services/*.ttf
 !apps/backend/services/Roboto-Regular.ttf
 !apps/backend/services/Roboto-Bold.ttf
+
+# Security - never commit these
+vendor_private_key.pem
+license*.key
+*.db

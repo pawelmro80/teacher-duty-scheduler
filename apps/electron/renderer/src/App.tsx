@@ -9,9 +9,11 @@ import { TeachersList } from './components/TeachersList'
 import { MergeModal } from './components/MergeModal'
 import { DutySettings } from './components/DutySettings'
 import { GeneratorView } from './components/GeneratorView'
+import { LicenseActivation } from './components/LicenseActivation'
 
 import defaultLogo from './assets/logo.png'
-import { Edit2 } from 'lucide-react'
+import { Edit2, LogOut } from 'lucide-react'
+import { Login } from './components/Login'
 
 interface OCRResult extends TeacherSchedule {
     origin?: 'upload' | 'database'
@@ -34,6 +36,53 @@ function App() {
     // Logo State
     const [logoSrc, setLogoSrc] = useState<string>(defaultLogo)
 
+    // Auth State
+    const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
+
+    // License State
+    const [isLicensed, setIsLicensed] = useState<boolean | null>(null) // null = loading
+
+    // Sidebar State
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+
+    // --- ALL HOOKS MUST BE ABOVE ANY EARLY RETURNS ---
+
+    // 1. Check License Status (with retry — backend may start after frontend)
+    useEffect(() => {
+        let cancelled = false
+        const checkLicense = async (retries = 10) => {
+            for (let i = 0; i < retries; i++) {
+                if (cancelled) return
+                try {
+                    const res = await axios.get('http://127.0.0.1:8765/api/auth/status')
+                    if (!cancelled) setIsLicensed(res.data.licensed)
+                    return
+                } catch (e) {
+                    // Backend not ready yet — wait and retry
+                    if (i < retries - 1) {
+                        await new Promise(r => setTimeout(r, 2000))
+                    }
+                }
+            }
+            // All retries failed
+            if (!cancelled) setIsLicensed(false)
+        }
+        checkLicense()
+        return () => { cancelled = true }
+    }, [])
+
+    // 2. Auth Interceptor
+    useEffect(() => {
+        if (token) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+            localStorage.setItem('token', token)
+        } else {
+            delete axios.defaults.headers.common['Authorization']
+            localStorage.removeItem('token')
+        }
+    }, [token])
+
+    // 3. Health Check
     useEffect(() => {
         const checkHealth = async () => {
             try {
@@ -48,7 +97,7 @@ function App() {
         return () => clearInterval(interval)
     }, [])
 
-    // Fetch Logo
+    // 4. Fetch Logo
     useEffect(() => {
         const fetchLogo = async () => {
             try {
@@ -62,6 +111,20 @@ function App() {
         }
         fetchLogo()
     }, [])
+
+    // --- GUARD CLAUSES (after all hooks) ---
+
+    if (isLicensed === null) {
+        return <div className="h-screen flex items-center justify-center text-gray-500">Ładowanie systemu...</div>
+    }
+
+    if (isLicensed === false) {
+        return <LicenseActivation onSuccess={() => setIsLicensed(true)} />
+    }
+
+    if (!token) {
+        return <Login onLoginSuccess={setToken} />
+    }
 
     const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return
@@ -195,7 +258,7 @@ function App() {
         }
     }
 
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
@@ -250,6 +313,19 @@ function App() {
                             {!isSidebarCollapsed && <span>{item.label}</span>}
                         </button>
                     ))}
+
+                    <div className="pt-4 border-t border-gray-100 mt-4">
+                        <button
+                            onClick={() => setToken(null)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors
+                                ${isSidebarCollapsed ? 'justify-center' : ''}
+                            `}
+                            title="Wyloguj Się"
+                        >
+                            <LogOut className="h-5 w-5 shrink-0" />
+                            {!isSidebarCollapsed && <span>Wyloguj</span>}
+                        </button>
+                    </div>
                 </nav>
 
                 {/* Logo Footer */}
